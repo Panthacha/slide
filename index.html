@@ -13,8 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Inline SVGs used for icons -->
 
   <script>
     tailwind.config = {
@@ -687,29 +686,29 @@
 
 
   <!-- Bottom Control Bar -->
-  <footer class="fixed bottom-4 z-40 flex items-center gap-3 bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-cute border border-white">
-    <button id="prev-btn" onclick="prevSlide()" class="p-2.5 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Previous Slide (Left Arrow)">
-      <i data-lucide="chevron-left" class="w-6 h-6"></i>
+  <footer class="fixed bottom-6 z-40 flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-cute border border-slate-100">
+    <button id="prev-btn" onclick="prevSlide()" class="p-2 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Previous Slide (Left Arrow)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m15 18-6-6 6-6"/></svg>
     </button>
 
-    <div id="slide-indicator" class="font-bold text-slate-700 text-lg px-3 min-w-[5rem] text-center">
+    <div id="slide-indicator" class="font-extrabold text-slate-700 text-xl px-3 min-w-[5.5rem] text-center tracking-wide">
       01 / 15
     </div>
 
-    <button id="next-btn" onclick="nextSlide()" class="p-2.5 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Next Slide (Right Arrow or Spacebar)">
-      <i data-lucide="chevron-right" class="w-6 h-6"></i>
+    <button id="next-btn" onclick="nextSlide()" class="p-2 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Next Slide (Right Arrow or Spacebar)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m9 18 6-6-6-6"/></svg>
     </button>
 
-    <div class="h-6 w-px bg-slate-200 mx-1"></div>
+    <div class="h-6 w-px bg-slate-200 mx-2"></div>
 
     <!-- Overview Grid Button -->
-    <button onclick="toggleGridOverview()" class="p-2.5 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700" title="Overview Grid (Key: G)">
-      <i data-lucide="layout-grid" class="w-5 h-5"></i>
+    <button onclick="toggleGridOverview()" class="p-2 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700" title="Overview Grid (Key: G)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
     </button>
 
     <!-- Fullscreen Toggle Button -->
-    <button onclick="toggleFullScreen()" class="p-2.5 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700" title="Full Screen (Key: F)">
-      <i data-lucide="maximize" class="w-5 h-5"></i>
+    <button onclick="toggleFullScreen()" class="p-2 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700" title="Full Screen (Key: F)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
     </button>
   </footer>
 
@@ -721,7 +720,7 @@
         <span>📑</span> ภาพรวมสไลด์ทั้งหมด (Slide Overview)
       </h3>
       <button onclick="toggleGridOverview()" class="bg-white/20 hover:bg-white/30 text-white rounded-full p-2 transition-colors">
-        <i data-lucide="x" class="w-7 h-7"></i>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-7 h-7"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
     </div>
 
@@ -735,7 +734,7 @@
   <div id="qr-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" onclick="toggleQrModal()">
     <div class="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl relative" onclick="event.stopPropagation()">
       <button onclick="toggleQrModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-        <i data-lucide="x" class="w-6 h-6"></i>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
       <h3 class="text-2xl font-bold text-slate-800 mb-4">สแกนรับไฟล์ Prompt ✨</h3>
       <div class="w-64 h-64 bg-slate-50 border-2 border-slate-200 rounded-2xl mx-auto flex items-center justify-center p-4 mb-4">
@@ -772,9 +771,6 @@
       osc.start();
       osc.stop(audioCtx.currentTime + 0.08);
     }
-
-    // Initialize Lucide Icons
-    lucide.createIcons();
 
     // Render Slide Overview Cards
     function initGridOverview() {
