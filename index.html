@@ -161,19 +161,22 @@
   </style>
 </head>
 
-<body class="relative flex flex-col justify-between items-center h-screen w-screen select-none overflow-hidden">
+<body class="relative h-screen w-screen select-none overflow-hidden">
 
-  <div class="bg-bubble w-96 h-96 bg-pastel-pink/60 top-[-5%] left-[-5%]"></div>
-  <div class="bg-bubble w-[30rem] h-[30rem] bg-pastel-blue/50 bottom-[-10%] right-[-5%]" style="animation-delay: -4s;"></div>
-  <div class="bg-bubble w-80 h-80 bg-pastel-yellow/60 bottom-[10%] left-[20%]" style="animation-delay: -7s;"></div>
-  <div class="bg-bubble w-72 h-72 bg-pastel-mint/50 top-[15%] right-[15%]" style="animation-delay: -2s;"></div>
+  <!-- Background Bubbles -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="bg-bubble w-96 h-96 bg-pastel-pink/60 top-[-5%] left-[-5%]"></div>
+    <div class="bg-bubble w-[30rem] h-[30rem] bg-pastel-blue/50 bottom-[-10%] right-[-5%]" style="animation-delay: -4s;"></div>
+    <div class="bg-bubble w-80 h-80 bg-pastel-yellow/60 bottom-[10%] left-[20%]" style="animation-delay: -7s;"></div>
+    <div class="bg-bubble w-72 h-72 bg-pastel-mint/50 top-[15%] right-[15%]" style="animation-delay: -2s;"></div>
+  </div>
 
   <!-- Top Progress Bar -->
   <div class="w-full h-2 bg-white/40 absolute top-0 left-0 z-50">
     <div id="progress-bar" class="h-full bg-gradient-to-r from-amber-300 via-pink-400 to-indigo-400 transition-all duration-300 ease-out" style="width: 6.66%;"></div>
   </div>
 
-  <main class="slide-viewport z-20">
+  <main class="slide-viewport z-20 absolute inset-0">
     <div class="slide-frame relative">
 
       <!-- ==================== SLIDE 1: TITLE ==================== -->
