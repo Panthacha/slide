@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สร้างเกมง่ายๆ ด้วย AI 🎮✨ | Gemini Canvas Workshop</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Prompt & Mitr for cute modern Thai typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            prompt: ['Prompt', 'sans-serif'],
+            mitr: ['Mitr', 'sans-serif'],
+          },
+          colors: {
+            pastel: {
+              yellow: '#FFF3C4',
+              pink: '#FFDEEB',
+              blue: '#D0E8FF',
+              mint: '#D1F2E8',
+              purple: '#E3D5FF',
+              orange: '#FFE2C8',
+              cardYellow: '#FFFDF0',
+              cardPink: '#FFF5F9',
+              cardBlue: '#F2F8FF',
+              cardMint: '#F0FAF7',
+              textDark: '#2D3748',
+              textMuted: '#5A6A85',
+            }
+          },
+          boxShadow: {
+            'cute': '0 10px 25px -5px rgba(180, 190, 220, 0.4), 0 8px 10px -6px rgba(180, 190, 220, 0.3)',
+            'cute-hover': '0 20px 30px -10px rgba(160, 175, 215, 0.5), 0 10px 15px -5px rgba(160, 175, 215, 0.4)',
+            'pop': '0 8px 0px 0px rgba(0, 0, 0, 0.06)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: linear-gradient(135deg, #FFF7ED 0%, #EFF6FF 50%, #FAF5FF 100%);
+      color: #2D3748;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Aspect Ratio Container for Presentation Viewport */
+    .slide-viewport {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .slide-frame {
+      width: 100vw;
+      height: 56.25vw; /* 16:9 ratio */
+      max-height: 100vh;
+      max-width: 177.78vh; /* 16:9 ratio */
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Slide Transition Animations */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96) translateY(20px);
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      padding: 2.5rem 3.5rem;
+      box-sizing: border-box;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+      z-index: 10;
+    }
+
+    .slide.prev-slide {
+      transform: scale(0.96) translateY(-20px);
+    }
+
+    /* Animated background elements */
+    .bg-bubble {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      z-index: 1;
+      animation: float 12s infinite ease-in-out alternate;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px) rotate(0deg); }
+      100% { transform: translateY(-30px) rotate(10deg); }
+    }
+
+    /* Glassmorphism Card Style */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      border-radius: 1.75rem;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1.25rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    /* Custom Scrollbar for slide overview */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+
+<body class="relative flex flex-col justify-between items-center h-screen w-screen select-none overflow-hidden">
+
+  <div class="bg-bubble w-96 h-96 bg-pastel-pink/60 top-[-5%] left-[-5%]"></div>
+  <div class="bg-bubble w-[30rem] h-[30rem] bg-pastel-blue/50 bottom-[-10%] right-[-5%]" style="animation-delay: -4s;"></div>
+  <div class="bg-bubble w-80 h-80 bg-pastel-yellow/60 bottom-[10%] left-[20%]" style="animation-delay: -7s;"></div>
+  <div class="bg-bubble w-72 h-72 bg-pastel-mint/50 top-[15%] right-[15%]" style="animation-delay: -2s;"></div>
+
+  <!-- Top Progress Bar -->
+  <div class="w-full h-2 bg-white/40 absolute top-0 left-0 z-50">
+    <div id="progress-bar" class="h-full bg-gradient-to-r from-amber-300 via-pink-400 to-indigo-400 transition-all duration-300 ease-out" style="width: 6.66%;"></div>
+  </div>
+
+  <main class="slide-viewport z-20">
+    <div class="slide-frame relative">
+
+      <!-- ==================== SLIDE 1: TITLE ==================== -->
+      <section class="slide active flex flex-col items-center justify-center text-center">
+        <div class="glass-card p-10 md:p-14 max-w-4xl w-full shadow-cute flex flex-col items-center relative overflow-hidden">
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-pastel-yellow rounded-full opacity-60"></div>
+          <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-pastel-pink rounded-full opacity-60"></div>
+
+          <div class="badge-pill bg-pastel-yellow text-amber-800 mb-6 shadow-sm">
+            <span class="animate-bounce">✨</span> Workshop สุขสันต์สำหรับทุกคน <span class="animate-bounce">✨</span>
+          </div>
+
+          <h1 class="text-5xl md:text-6xl font-extrabold text-slate-800 leading-tight mb-4 tracking-tight">
+            สร้างเกมง่ายๆ ด้วย AI <span class="inline-block animate-pulse">🎮✨</span>
+          </h1>
+
+          <p class="text-2xl md:text-3xl font-medium text-slate-600 mb-8">
+            สนุกกับการออกแบบเกมด้วย <span class="text-indigo-600 font-bold underline decoration-wavy decoration-pink-400">Gemini Canvas</span>
+          </p>
+
+          <div class="flex flex-wrap justify-center gap-4 text-3xl p-4 bg-white/80 rounded-2xl shadow-inner border border-slate-100">
+            <span class="hover:scale-125 transition-transform duration-200 cursor-pointer" title="Rocket">🚀</span>
+            <span class="hover:scale-125 transition-transform duration-200 cursor-pointer" title="Robot">🤖</span>
+            <span class="hover:scale-125 transition-transform duration-200 cursor-pointer" title="Art">🎨</span>
+            <span class="hover:scale-125 transition-transform duration-200 cursor-pointer" title="Game Controller">👾</span>
+            <span class="hover:scale-125 transition-transform duration-200 cursor-pointer" title="Magic Wand">🪄</span>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 2: HIGHLIGHT GAMES ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-4">
+          <span class="badge-pill bg-pastel-pink text-pink-700 mb-2">Today's Showcase</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">วันนี้เราจะสร้างอะไรกัน? 🤩</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-auto">
+          <!-- Game 1 -->
+          <div class="glass-card p-6 flex flex-col items-center text-center shadow-cute hover:-translate-y-2 transition-all duration-300 border-t-8 border-t-amber-300">
+            <div class="w-20 h-20 bg-pastel-yellow rounded-2xl flex items-center justify-center text-4xl mb-4 shadow-sm">
+              🌾
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">Farmstead</h3>
+            <p class="text-slate-600 text-lg">เกมทำฟาร์ม ปลูกผักแสนสนุก + ฝึกคิดเลขเร็ว 🧮</p>
+          </div>
+
+          <!-- Game 2 -->
+          <div class="glass-card p-6 flex flex-col items-center text-center shadow-cute hover:-translate-y-2 transition-all duration-300 border-t-8 border-t-pink-300">
+            <div class="w-20 h-20 bg-pastel-pink rounded-2xl flex items-center justify-center text-4xl mb-4 shadow-sm">
+              🍓
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">Berry Garden</h3>
+            <p class="text-slate-600 text-lg">เกมพัซเซิลจับคู่ เรียงผลไม้หลากสีสุดน่ารัก 🧩</p>
+          </div>
+
+          <!-- Game 3 -->
+          <div class="glass-card p-6 flex flex-col items-center text-center shadow-cute hover:-translate-y-2 transition-all duration-300 border-t-8 border-t-indigo-300">
+            <div class="w-20 h-20 bg-pastel-blue rounded-2xl flex items-center justify-center text-4xl mb-4 shadow-sm">
+              ⚔️
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">RUINS RUMBLE</h3>
+            <p class="text-slate-600 text-lg">เกมแอคชันตะลุยด่าน ตะลุยปราสาทโบราณ 🛡️</p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 3: WHAT IS GEMINI CANVAS ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-2">
+          <span class="badge-pill bg-pastel-blue text-blue-800 mb-2">Super AI Helper</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">Gemini Canvas คืออะไร? 🤖</h2>
+        </div>
+
+        <div class="glass-card p-6 text-center max-w-3xl mx-auto mb-4 bg-white/90">
+          <p class="text-2xl md:text-3xl font-semibold text-slate-700">
+            "ผู้ช่วยอัจฉริยะที่ช่วยเขียนโค้ด และแสดงผลเกมให้ดูได้ <span class="text-pink-500 underline">ทันที!</span>" ⚡
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto max-w-4xl mx-auto w-full">
+          <!-- Cross Box -->
+          <div class="bg-red-50/90 border-2 border-red-200 rounded-3xl p-6 flex items-center gap-5 shadow-sm">
+            <div class="w-16 h-16 bg-red-400 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shrink-0">
+              ❌
+            </div>
+            <div class="text-left">
+              <h3 class="text-2xl font-bold text-red-700 mb-1">ไม่ต้องจำโค้ด!</h3>
+              <p class="text-slate-600 text-lg">ไม่ต้องท่องจำไวยากรณ์ยากๆ หรือพิมพ์ผิดชีวิตเปลี่ยนอีกต่อไป</p>
+            </div>
+          </div>
+
+          <!-- Check Box -->
+          <div class="bg-emerald-50/90 border-2 border-emerald-200 rounded-3xl p-6 flex items-center gap-5 shadow-sm">
+            <div class="w-16 h-16 bg-emerald-400 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shrink-0">
+              ✅
+            </div>
+            <div class="text-left">
+              <h3 class="text-2xl font-bold text-emerald-800 mb-1">สั่งด้วยภาษาคน (Prompt)</h3>
+              <p class="text-slate-600 text-lg">อยากได้อะไร ก็แค่พิมพ์บอก AI เหมือนคุยกับเพื่อน!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 4: WORKFLOW ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-4">
+          <span class="badge-pill bg-pastel-mint text-emerald-800 mb-2">Simple Process</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">Workflow สุดว้าว 🔄</h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-auto">
+          <!-- Step 1 -->
+          <div class="glass-card p-6 flex flex-col items-center text-center relative shadow-cute bg-pastel-cardYellow">
+            <div class="absolute -top-4 bg-amber-400 text-white text-sm font-bold px-3 py-1 rounded-full">STEP 1</div>
+            <div class="text-5xl my-4">💡</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">คิดไอเดีย</h3>
+            <p class="text-slate-600">จินตนาการธีมเกม และกติกาน่ารักๆ</p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="glass-card p-6 flex flex-col items-center text-center relative shadow-cute bg-pastel-cardPink">
+            <div class="absolute -top-4 bg-pink-400 text-white text-sm font-bold px-3 py-1 rounded-full">STEP 2</div>
+            <div class="text-5xl my-4">⌨️</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">พิมพ์ Prompt</h3>
+            <p class="text-slate-600">อธิบายสิ่งที่ต้องการให้ AI เข้าใจ</p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="glass-card p-6 flex flex-col items-center text-center relative shadow-cute bg-pastel-cardBlue">
+            <div class="absolute -top-4 bg-blue-400 text-white text-sm font-bold px-3 py-1 rounded-full">STEP 3</div>
+            <div class="text-5xl my-4">👁️</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">ดู Preview</h3>
+            <p class="text-slate-600">ทดลองเล่นเกมที่ AI สร้างขึ้นทันที</p>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="glass-card p-6 flex flex-col items-center text-center relative shadow-cute bg-pastel-cardMint">
+            <div class="absolute -top-4 bg-emerald-400 text-white text-sm font-bold px-3 py-1 rounded-full">STEP 4</div>
+            <div class="text-5xl my-4">🛠️</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">ปรับแก้จนพอใจ</h3>
+            <p class="text-slate-600">สั่งแต่งสี เพิ่มฟีเจอร์ หรือแก้บั๊ก</p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 5: GAME COMPONENTS ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-2">
+          <span class="badge-pill bg-pastel-purple text-purple-800 mb-2">Building Blocks</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">ส่วนประกอบของเกม (HTML5) 🧩</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-auto">
+          <!-- HTML Card -->
+          <div class="glass-card p-6 flex flex-col items-center text-center shadow-cute border-b-8 border-b-amber-400">
+            <div class="text-5xl mb-3">🏗️</div>
+            <div class="bg-amber-100 text-amber-800 px-4 py-1 rounded-full font-bold text-xl mb-3">HTML</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">โครงสร้าง</h3>
+            <p class="text-slate-600 text-lg">เหมือนเสาบ้าน วางปุ่ม ตัวละคร กริด และข้อความต่างๆ</p>
+          </div>
+
+          <!-- CSS Card -->
+          <div class="glass-card p-6 flex flex-col items-center text-center shadow-cute border-b-8 border-b-sky-400">
+            <div class="text-5xl mb-3">🎨</div>
+            <div class="bg-sky-100 text-sky-800 px-4 py-1 rounded-full font-bold text-xl mb-3">CSS</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">ความสวยงาม</h3>
+            <p class="text-slate-600 text-lg">แต่งหน้าทาปาก เติมสีพาสเทล จัดวางตำแหน่ง และใส่แอนิเมชัน</p>
+          </div>
+
+          <!-- JS Card -->
+          <div class="glass-card p-6 flex flex-col items-center text-center shadow-cute border-b-8 border-b-emerald-400">
+            <div class="text-5xl mb-3">⚙️</div>
+            <div class="bg-emerald-100 text-emerald-800 px-4 py-1 rounded-full font-bold text-xl mb-3">JavaScript</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">กติกาเกม</h3>
+            <p class="text-slate-600 text-lg">สมองของเกม คำนวณคะแนน นับเวลา และการเคลื่อนไหว</p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 6: PROMPT TIPS ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-2">
+          <span class="badge-pill bg-pastel-yellow text-amber-800 mb-2">Secret Recipe</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">เคล็ดลับการเขียน Prompt ที่ดี ✍️</h2>
+        </div>
+
+        <p class="text-center text-2xl text-slate-600 mb-2">สูตรสำเร็จ 3 องค์ประกอบหลัก สั่ง AI ได้ตรงใจ!</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-auto">
+          <div class="glass-card p-6 flex flex-col items-start shadow-cute bg-amber-50/50">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-3xl">📍</span>
+              <h3 class="text-2xl font-bold text-amber-900">1. ธีมเกมคืออะไร?</h3>
+            </div>
+            <p class="text-slate-600 text-lg">ระบุแนวเกม ชัดเจน เช่น ฟาร์ม, อวกาศ, ทำอาหาร, ตะลุยปราสาท</p>
+          </div>
+
+          <div class="glass-card p-6 flex flex-col items-start shadow-cute bg-pink-50/50">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-3xl">🎮</span>
+              <h3 class="text-2xl font-bold text-pink-900">2. เล่นยังไง?</h3>
+            </div>
+            <p class="text-slate-600 text-lg">อธิบายกติกา ปุ่มที่ต้องกด วิธีชนะ วิธีแพ้ และระบบคะแนน</p>
+          </div>
+
+          <div class="glass-card p-6 flex flex-col items-start shadow-cute bg-blue-50/50">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-3xl">🎨</span>
+              <h3 class="text-2xl font-bold text-blue-900">3. หน้าตาแบบไหน?</h3>
+            </div>
+            <p class="text-slate-600 text-lg">กำหนดโทนสี (เช่น สีพาสเทลสดใส) สไตล์ปุ่ม และกริดหน้าจอ</p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 7: BAD VS GOOD PROMPT ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-2">
+          <span class="badge-pill bg-pastel-pink text-pink-800 mb-2">Prompt Comparison</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">❌ Prompt แย่ vs ✅ Prompt เยี่ยม</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto">
+          <!-- Bad Prompt -->
+          <div class="bg-red-50/90 border-2 border-red-300 rounded-3xl p-8 flex flex-col justify-between shadow-sm">
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <span class="text-3xl">❌</span>
+                <h3 class="text-2xl font-bold text-red-700">Prompt สั้นเกินไป</h3>
+              </div>
+              <div class="bg-white p-4 rounded-2xl border border-red-200 text-xl font-mono text-slate-700 mb-4 shadow-inner">
+                "สร้างเกมทำฟาร์มให้หน่อย"
+              </div>
+            </div>
+            <p class="text-red-600 font-medium text-lg">
+              ⚠️ ผลลัพธ์: AI จะเดาเอาเองทั้งหมด เกมอาจจะไม่ตรงกับที่เราคิดไว้
+            </p>
+          </div>
+
+          <!-- Good Prompt -->
+          <div class="bg-emerald-50/90 border-2 border-emerald-300 rounded-3xl p-8 flex flex-col justify-between shadow-sm">
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <span class="text-3xl">✅</span>
+                <h3 class="text-2xl font-bold text-emerald-800">Prompt มีรายละเอียดชัดเจน</h3>
+              </div>
+              <div class="bg-white p-4 rounded-2xl border border-emerald-200 text-lg font-mono text-slate-700 mb-4 shadow-inner">
+                "สร้างเกมทำฟาร์มแบบ HTML5 มีกริด 4x4 ปลูกแครอทได้ มีระบบพลังงาน โทนสีพาสเทล"
+              </div>
+            </div>
+            <p class="text-emerald-700 font-medium text-lg">
+              ✨ ผลลัพธ์: AI ทำได้เป๊ะ ตรงตามโจทย์ ได้เกมสวยงามพร้อมเล่น!
+            </p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 8: WORKSHOP INTRO ==================== -->
+      <section class="slide flex flex-col justify-between text-center">
+        <div class="badge-pill bg-pastel-yellow text-amber-800 mx-auto mb-2">Hands-On Workshop</div>
+        <h2 class="text-4xl md:text-5xl font-bold text-slate-800 mb-2">🌾 เวิร์กชอป: สร้าง Farmstead ด้วยกัน!</h2>
+
+        <div class="glass-card p-10 max-w-4xl mx-auto my-auto shadow-cute bg-gradient-to-br from-amber-50/80 to-emerald-50/80 flex flex-col items-center">
+          <div class="text-7xl mb-6 animate-bounce">👩🌾🧺🥕</div>
+
+          <h3 class="text-3xl font-bold text-slate-800 mb-4">
+            เรียนรู้การสร้าง Farmstead ไปพร้อมๆ กันทีละสเตป
+          </h3>
+
+          <p class="text-2xl text-slate-600 max-w-2xl leading-relaxed">
+            เริ่มตั้งแต่โครงสร้างแปลงผัก ตกแต่งชาวสวนสุดน่ารัก จนถึงการใส่ระบบปลูกผัก!
+          </p>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 9: FARMSTEAD PLANTING ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-2">
+          <span class="badge-pill bg-pastel-mint text-emerald-800 mb-2">Core Mechanics</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">Farmstead: ระบบปลูกผัก 🥕</h2>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4 my-auto">
+          <!-- Step 1 -->
+          <div class="glass-card p-6 text-center w-full md:w-64 shadow-cute">
+            <div class="text-5xl mb-2">🌱</div>
+            <h3 class="text-2xl font-bold text-emerald-700 mb-1">1. ปลูกผัก</h3>
+            <p class="text-slate-600">เลือกเมล็ดพันธุ์ลงแปลง</p>
+          </div>
+
+          <div class="text-3xl font-bold text-slate-400 hidden md:block">➡️</div>
+
+          <!-- Step 2 -->
+          <div class="glass-card p-6 text-center w-full md:w-64 shadow-cute">
+            <div class="text-5xl mb-2">💧</div>
+            <h3 class="text-2xl font-bold text-blue-700 mb-1">2. รดน้ำ</h3>
+            <p class="text-slate-600">ดูแลให้พืชเจริญเติบโต</p>
+          </div>
+
+          <div class="text-3xl font-bold text-slate-400 hidden md:block">➡️</div>
+
+          <!-- Step 3 -->
+          <div class="glass-card p-6 text-center w-full md:w-64 shadow-cute">
+            <div class="text-5xl mb-2">🧺</div>
+            <h3 class="text-2xl font-bold text-amber-700 mb-1">3. เก็บเกี่ยว</h3>
+            <p class="text-slate-600">รับคะแนนและผลผลิต</p>
+          </div>
+        </div>
+
+        <div class="bg-amber-100/80 border border-amber-300 rounded-2xl p-4 max-w-2xl mx-auto text-center shadow-sm">
+          <p class="text-xl font-bold text-amber-900">
+            🪄 ไม่ต้องกังวล! โค้ดซับซ้อนส่วนนี้ AI จะจัดการสร้างให้เราทั้งหมด
+          </p>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 10: MATH CHALLENGE ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-2">
+          <span class="badge-pill bg-pastel-purple text-purple-800 mb-2">Extra Gamification</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">Farmstead: เพิ่มความท้าทายด้วยคณิตศาสตร์ 🧮</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto max-w-4xl mx-auto w-full">
+          <div class="glass-card p-8 flex flex-col items-center text-center shadow-cute bg-purple-50/60">
+            <div class="w-20 h-20 bg-purple-200 text-purple-800 rounded-3xl flex items-center justify-center text-4xl mb-4">
+              🔓
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-3">ปลดล็อกพื้นที่ใหม่</h3>
+            <p class="text-slate-600 text-xl leading-relaxed">
+              ตอบโจทย์เลขให้ถูกต้อง เพื่อขยายแปลงฟาร์มให้ใหญ่ขึ้น!
+            </p>
+          </div>
+
+          <div class="glass-card p-8 flex flex-col items-center text-center shadow-cute bg-amber-50/60">
+            <div class="w-20 h-20 bg-amber-200 text-amber-800 rounded-3xl flex items-center justify-center text-4xl mb-4">
+              💰
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-3">คำนวณเงินทอน</h3>
+            <p class="text-slate-600 text-xl leading-relaxed">
+              ขายผักให้พ่อค้า ต้องคิดเลขทอนเงินให้ถูกต้องรับโบนัสพิเศษ!
+            </p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 11: DO IT TOGETHER ==================== -->
+      <section class="slide flex flex-col justify-between text-center">
+        <div class="badge-pill bg-pastel-pink text-pink-800 mx-auto mb-2">Action Time</div>
+        <h2 class="text-4xl md:text-5xl font-bold text-slate-800 mb-2">💻 ลุยเลย! (Do It Together)</h2>
+
+        <div class="glass-card p-8 max-w-3xl mx-auto my-auto shadow-cute space-y-6 text-left">
+          <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-3xl font-bold text-pink-500 bg-pink-100 w-12 h-12 rounded-full flex items-center justify-center shrink-0">1</span>
+            <p class="text-2xl font-semibold text-slate-700">เปิด Gemini Canvas ของทุกคนขึ้นมา 🖥️</p>
+          </div>
+
+          <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-3xl font-bold text-pink-500 bg-pink-100 w-12 h-12 rounded-full flex items-center justify-center shrink-0">2</span>
+            <p class="text-2xl font-semibold text-slate-700">นำ Prompt ของเกม Farmstead ไปวาง 📋</p>
+          </div>
+
+          <div class="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <span class="text-3xl font-bold text-pink-500 bg-pink-100 w-12 h-12 rounded-full flex items-center justify-center shrink-0">3</span>
+            <p class="text-2xl font-semibold text-slate-700">กดส่งแล้วรอดูเวทมนตร์จาก AI ได้เลย! ✨</p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 12: YOUR TURN ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-2">
+          <span class="badge-pill bg-pastel-yellow text-amber-800 mb-2">Individual Project</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">🎨 ถึงตาคุณแล้ว! (Your Turn)</h2>
+        </div>
+
+        <p class="text-center text-2xl text-slate-600 mb-2">นำใบงานไปออกแบบเกมของคุณเอง! (เลือก 1 เกม)</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto">
+          <!-- Choice A -->
+          <div class="glass-card p-8 flex flex-col items-center text-center shadow-cute bg-pink-50/70 border-t-8 border-t-pink-400">
+            <div class="text-6xl mb-3">🍓</div>
+            <h3 class="text-3xl font-bold text-slate-800 mb-2">Berry Garden</h3>
+            <div class="badge-pill bg-pink-200 text-pink-800 text-base mb-3">สายชิล ชอบพัซเซิล 🧩</div>
+            <p class="text-slate-600 text-lg">ออกแบบเกมเรียงผลไม้ จับคู่ 3 สีสวยสดใส</p>
+          </div>
+
+          <!-- Choice B -->
+          <div class="glass-card p-8 flex flex-col items-center text-center shadow-cute bg-indigo-50/70 border-t-8 border-t-indigo-400">
+            <div class="text-6xl mb-3">⚔️</div>
+            <h3 class="text-3xl font-bold text-slate-800 mb-2">RUINS RUMBLE</h3>
+            <div class="badge-pill bg-indigo-200 text-indigo-800 text-base mb-3">สายบู๊ ชอบแอคชัน ⚔️</div>
+            <p class="text-slate-600 text-lg">ออกแบบเกมกระโดดหลบอุปสรรค ตะลุยด่านตื่นเต้น</p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 13: MODIFICATION IDEAS ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-2">
+          <span class="badge-pill bg-pastel-mint text-emerald-800 mb-2">Creative Expansion</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">💡 ไอเดียดัดแปลงเกม</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto">
+          <div class="glass-card p-6 flex items-center gap-5 shadow-cute">
+            <div class="text-5xl shrink-0">🍎➡️🛸</div>
+            <div>
+              <h3 class="text-2xl font-bold text-slate-800 mb-1">เปลี่ยนธีมสิ่งของ</h3>
+              <p class="text-slate-600 text-lg">เปลี่ยนผลไม้/พืช เป็นยานอวกาศ หรือสัตว์เลี้ยงน่ารัก</p>
+            </div>
+          </div>
+
+          <div class="glass-card p-6 flex items-center gap-5 shadow-cute">
+            <div class="text-5xl shrink-0">🔤</div>
+            <div>
+              <h3 class="text-2xl font-bold text-slate-800 mb-1">เปลี่ยนวิชาท้าทาย</h3>
+              <p class="text-slate-600 text-lg">เปลี่ยนจากโจทย์เลข เป็นทายคำศัพท์ภาษาอังกฤษ</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card p-6 text-center max-w-3xl mx-auto shadow-cute bg-gradient-to-r from-pastel-pink via-pastel-purple to-pastel-blue">
+          <p class="text-3xl font-extrabold text-slate-800">
+            ปลดปล่อยจินตนาการให้เต็มที่! 🌈✨
+          </p>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 14: TROUBLESHOOTING ==================== -->
+      <section class="slide flex flex-col justify-between">
+        <div class="text-center mb-2">
+          <span class="badge-pill bg-pastel-orange text-orange-800 mb-2">Help & Advice</span>
+          <h2 class="text-4xl md:text-5xl font-bold text-slate-800">🛠️ ถ้าเกิดปัญหา (Troubleshooting)</h2>
+        </div>
+
+        <div class="glass-card p-6 text-center max-w-2xl mx-auto mb-2 bg-orange-50 border border-orange-200">
+          <p class="text-2xl font-bold text-orange-800">
+            เกมพัง? มีบั๊ก? ไม่ต้องตกใจ! 🤗
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-auto">
+          <div class="glass-card p-6 flex flex-col items-start shadow-cute border-l-8 border-l-blue-400">
+            <div class="text-4xl mb-3">💬</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">วิธีแจ้ง AI แก้ไข</h3>
+            <p class="text-slate-600 text-lg leading-relaxed">
+              พิมพ์บอก AI ตรงๆ เช่น: <br>
+              <span class="font-mono bg-slate-100 p-2 rounded-lg text-slate-800 text-base block mt-2">
+                "เกิด Error ตรงปุ่มกดรดน้ำ ช่วยแก้ให้หน่อย"
+              </span>
+            </p>
+          </div>
+
+          <div class="glass-card p-6 flex flex-col items-start shadow-cute border-l-8 border-l-red-400">
+            <div class="text-4xl mb-3">🛑</div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">ข้อควรระวัง</h3>
+            <p class="text-slate-600 text-lg leading-relaxed">
+              สั่งแก้ทีละส่วน อย่าสั่งแก้เยอะเกินไปในครั้งเดียว เพราะ AI อาจจะสับสนได้!
+            </p>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ==================== SLIDE 15: Q&A & START ==================== -->
+      <section class="slide flex flex-col justify-between text-center">
+        <div class="badge-pill bg-pastel-yellow text-amber-800 mx-auto mb-2">Let's Play</div>
+        <h2 class="text-4xl md:text-5xl font-bold text-slate-800 mb-2">Q&A และ ลุยกันเลย! 🚀</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-auto max-w-4xl mx-auto w-full items-center">
+          <div class="glass-card p-8 shadow-cute flex flex-col items-center bg-yellow-50/70">
+            <div class="text-6xl mb-4">🙋♀️🙋♂️</div>
+            <h3 class="text-3xl font-bold text-slate-800 mb-2">มีคำถามไหมครับ?</h3>
+            <p class="text-slate-600 text-xl">สอบถามพี่ๆ ทีมงานได้ตลอดเวลาเลยน้า</p>
+          </div>
+
+          <div class="glass-card p-8 shadow-cute flex flex-col items-center bg-indigo-50/70">
+            <!-- Simulated cute QR Code -->
+            <div class="w-40 h-40 bg-white p-3 rounded-2xl shadow-md border-2 border-slate-200 flex flex-col items-center justify-center mb-4 relative group cursor-pointer" onclick="toggleQrModal()">
+              <svg class="w-full h-full text-slate-800" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zm-3 0h2v3h-2v-3zm3 3h3v5h-3v-5zm-6 2h3v3h-3v-3zm3 3h3v2h-3v-2z"/>
+              </svg>
+              <div class="absolute inset-0 bg-slate-900/10 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="bg-white text-xs font-bold px-2 py-1 rounded shadow">ขยาย QR</span>
+              </div>
+            </div>
+            <p class="text-slate-700 font-bold text-lg">สแกนรับไฟล์ Prompt & เริ่มสนุกกันเลย! 🎉</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+
+  <!-- Bottom Control Bar -->
+  <footer class="fixed bottom-4 z-40 flex items-center gap-3 bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-cute border border-white">
+    <button id="prev-btn" onclick="prevSlide()" class="p-2.5 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Previous Slide (Left Arrow)">
+      <i data-lucide="chevron-left" class="w-6 h-6"></i>
+    </button>
+
+    <div id="slide-indicator" class="font-bold text-slate-700 text-lg px-3 min-w-[5rem] text-center">
+      01 / 15
+    </div>
+
+    <button id="next-btn" onclick="nextSlide()" class="p-2.5 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Next Slide (Right Arrow or Spacebar)">
+      <i data-lucide="chevron-right" class="w-6 h-6"></i>
+    </button>
+
+    <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
+    <!-- Overview Grid Button -->
+    <button onclick="toggleGridOverview()" class="p-2.5 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700" title="Overview Grid (Key: G)">
+      <i data-lucide="layout-grid" class="w-5 h-5"></i>
+    </button>
+
+    <!-- Fullscreen Toggle Button -->
+    <button onclick="toggleFullScreen()" class="p-2.5 rounded-full hover:bg-slate-100 active:scale-95 transition-all text-slate-700" title="Full Screen (Key: F)">
+      <i data-lucide="maximize" class="w-5 h-5"></i>
+    </button>
+  </footer>
+
+
+  <!-- Grid Overview Modal -->
+  <div id="grid-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex flex-col p-8 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="flex justify-between items-center mb-6 max-w-7xl mx-auto w-full">
+      <h3 class="text-3xl font-bold text-white flex items-center gap-3">
+        <span>📑</span> ภาพรวมสไลด์ทั้งหมด (Slide Overview)
+      </h3>
+      <button onclick="toggleGridOverview()" class="bg-white/20 hover:bg-white/30 text-white rounded-full p-2 transition-colors">
+        <i data-lucide="x" class="w-7 h-7"></i>
+      </button>
+    </div>
+
+    <div id="grid-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 overflow-y-auto p-2 max-w-7xl mx-auto w-full">
+      <!-- Generated dynamically by JavaScript -->
+    </div>
+  </div>
+
+
+  <!-- Enlarged QR Code Modal -->
+  <div id="qr-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" onclick="toggleQrModal()">
+    <div class="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl relative" onclick="event.stopPropagation()">
+      <button onclick="toggleQrModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+      <h3 class="text-2xl font-bold text-slate-800 mb-4">สแกนรับไฟล์ Prompt ✨</h3>
+      <div class="w-64 h-64 bg-slate-50 border-2 border-slate-200 rounded-2xl mx-auto flex items-center justify-center p-4 mb-4">
+        <svg class="w-full h-full text-slate-800" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v2h-3v-2zm-3 0h2v3h-2v-3zm3 3h3v5h-3v-5zm-6 2h3v3h-3v-3zm3 3h3v2h-3v-2z"/>
+        </svg>
+      </div>
+      <p class="text-slate-600 font-medium">สไลด์และ Prompt ตัวอย่างทั้งหมดรวมอยู่ในนี้แล้วครับ!</p>
+    </div>
+  </div>
+
+
+  <script>
+    // State management
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+
+    // Web Audio API for cute soft pop sound
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playPopSound() {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    }
+
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Render Slide Overview Cards
+    function initGridOverview() {
+      const container = document.getElementById('grid-container');
+      container.innerHTML = '';
+      slides.forEach((slide, index) => {
+        const titleText = slide.querySelector('h2')?.innerText || slide.querySelector('h1')?.innerText || \`Slide \${index + 1}\`;
+        const card = document.createElement('div');
+        card.className = \`p-4 rounded-2xl cursor-pointer border-2 transition-all flex flex-col justify-between h-32 \${
+          index === currentSlide 
+            ? 'bg-amber-100 border-amber-400 text-amber-900 font-bold shadow-md' 
+            : 'bg-white/90 border-slate-200 text-slate-700 hover:border-pink-300 hover:scale-105'
+        }\`;
+        card.onclick = () => {
+          goToSlide(index);
+          toggleGridOverview();
+        };
+        card.innerHTML = \`
+          <div class="text-xs font-bold text-slate-400">SLIDE \${index + 1}</div>
+          <div class="text-sm line-clamp-2 font-medium">\${titleText}</div>
+          <div class="text-xs text-right opacity-60">คลิกเพื่อไปยังหน้านี้ ➔</div>
+        \`;
+        container.appendChild(card);
+      });
+    }
+
+    // Slide Navigation Core
+    function updateSlideDisplay() {
+      slides.forEach((slide, index) => {
+        slide.classList.remove('active', 'prev-slide');
+        if (index === currentSlide) {
+          slide.classList.add('active');
+        } else if (index < currentSlide) {
+          slide.classList.add('prev-slide');
+        }
+      });
+
+      // Update progress bar & text
+      const progressPercent = ((currentSlide + 1) / totalSlides) * 100;
+      document.getElementById('progress-bar').style.width = \`\${progressPercent}%\`;
+
+      const formattedCurrent = String(currentSlide + 1).padStart(2, '0');
+      const formattedTotal = String(totalSlides).padStart(2, '0');
+      document.getElementById('slide-indicator').innerText = \`\${formattedCurrent} / \${formattedTotal}\`;
+
+      // Update Prev/Next buttons
+      document.getElementById('prev-btn').disabled = currentSlide === 0;
+      document.getElementById('next-btn').disabled = currentSlide === totalSlides - 1;
+    }
+
+    function goToSlide(index) {
+      if (index >= 0 && index < totalSlides) {
+        currentSlide = index;
+        updateSlideDisplay();
+        playPopSound();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        goToSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        goToSlide(currentSlide - 1);
+      }
+    }
+
+    // Toggle Grid Modal
+    function toggleGridOverview() {
+      const modal = document.getElementById('grid-modal');
+      const isOpen = modal.classList.contains('opacity-100');
+      if (!isOpen) {
+        initGridOverview();
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100', 'pointer-events-auto');
+      } else {
+        modal.classList.remove('opacity-100', 'pointer-events-auto');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+      }
+    }
+
+    // Toggle Fullscreen
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log(\`Error attempting to enable fullscreen: \${err.message}\`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Toggle QR Modal
+    function toggleQrModal() {
+      const modal = document.getElementById('qr-modal');
+      const isOpen = modal.classList.contains('opacity-100');
+      if (!isOpen) {
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100', 'pointer-events-auto');
+      } else {
+        modal.classList.remove('opacity-100', 'pointer-events-auto');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+      }
+    }
+
+    // Keyboard Shortcuts Listener
+    document.addEventListener('keydown', (e) => {
+      // Ignore if typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+        case ' ':
+        case 'PageDown':
+          e.preventDefault();
+          nextSlide();
+          break;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+        case 'PageUp':
+          e.preventDefault();
+          prevSlide();
+          break;
+        case 'g':
+        case 'G':
+          toggleGridOverview();
+          break;
+        case 'f':
+        case 'F':
+          toggleFullScreen();
+          break;
+        case 'Escape':
+          document.getElementById('grid-modal').classList.add('opacity-0', 'pointer-events-none');
+          document.getElementById('qr-modal').classList.add('opacity-0', 'pointer-events-none');
+          break;
+      }
+    });
+
+    // Touch Swipe Navigation for Mobile/Tablet
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+
+    document.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    });
+
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      if (touchEndX < touchStartX - swipeThreshold) {
+        nextSlide();
+      }
+      if (touchEndX > touchStartX + swipeThreshold) {
+        prevSlide();
+      }
+    }
+
+    // Initial display setup
+    window.onload = function() {
+      updateSlideDisplay();
+    };
+  </script>
+</body>
+</html>
